@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 
-// NOTE: Hasandi's real Auth module isn't wired in yet, so there's no real
-// logged-in user to know if you're the artisan or the customer. This role
-// switcher is a TEMPORARY testing aid — remove it once real login/JWT
-// auth exists, and get the role from the logged-in user instead.
+// NOTE: temporary role switcher — remove once real login/JWT auth exists,
+// and get the role from the logged-in user instead.
 function MyRequests() {
   const [role, setRole] = useState('artisan');
   const [requests, setRequests] = useState([]);
@@ -26,34 +24,23 @@ function MyRequests() {
   }, [role]);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '700px' }}>
-      <Link to="/">&larr; Back to products</Link>
+    <section className="section container form-section" style={{ maxWidth: '700px' }}>
+      <Link to="/" className="back-link">&larr; Back to products</Link>
       <h1>My Custom Requests</h1>
 
-      <div style={{ marginBottom: '20px' }}>
-        <span style={{ marginRight: '8px' }}>Viewing as:</span>
-        <button
-          onClick={() => setRole('artisan')}
-          style={{ fontWeight: role === 'artisan' ? 'bold' : 'normal', marginRight: '8px' }}
-        >
-          Artisan
-        </button>
-        <button
-          onClick={() => setRole('customer')}
-          style={{ fontWeight: role === 'customer' ? 'bold' : 'normal' }}
-        >
-          Customer
-        </button>
+      <div className="role-toggle">
+        <button className={role === 'artisan' ? 'active' : ''} onClick={() => setRole('artisan')}>Artisan</button>
+        <button className={role === 'customer' ? 'active' : ''} onClick={() => setRole('customer')}>Customer</button>
       </div>
 
       {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'salmon' }}>{error}</p>}
+      {error && <p className="error-text">{error}</p>}
       {!loading && requests.length === 0 && <p>No requests found for this role.</p>}
 
       {requests.map((req) => (
         <RequestCard key={req._id} request={req} role={role} onUpdated={fetchRequests} />
       ))}
-    </div>
+    </section>
   );
 }
 
@@ -98,37 +85,33 @@ function RequestCard({ request, role, onUpdated }) {
   };
 
   return (
-    <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
-      <p><strong>{request.description}</strong></p>
-      <p style={{ fontSize: '12px', color: '#999' }}>
-        Status: <strong>{request.status}</strong>
-        {request.budgetRange && ` · Budget: ${request.budgetRange}`}
-      </p>
+    <div className="request-card">
+      <p style={{ fontWeight: 600, marginBottom: '4px' }}>{request.description}</p>
+      <span className={`status-badge status-${request.status}`}>{request.status}</span>
+      {request.budgetRange && <span className="meta-line"> · Budget: {request.budgetRange}</span>}
 
       {request.quotation?.price && (
-        <p style={{ color: '#666' }}>
+        <p className="card-desc">
           Quoted: LKR {request.quotation.price} · {request.quotation.estimatedDays} days
           {request.quotation.message && ` — "${request.quotation.message}"`}
         </p>
       )}
 
-      {error && <p style={{ color: 'salmon' }}>{error}</p>}
+      {error && <p className="error-text">{error}</p>}
 
-      {/* Artisan quotes a pending request */}
       {role === 'artisan' && request.status === 'pending' && (
-        <form onSubmit={submitQuote} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+        <form onSubmit={submitQuote} className="quote-form">
           <input type="number" placeholder="Price (LKR)" required value={price} onChange={(e) => setPrice(e.target.value)} />
           <input type="number" placeholder="Estimated days" value={estimatedDays} onChange={(e) => setEstimatedDays(e.target.value)} />
           <input type="text" placeholder="Message to customer" value={message} onChange={(e) => setMessage(e.target.value)} />
-          <button type="submit" disabled={busy}>{busy ? 'Sending...' : 'Send quote'}</button>
+          <button type="submit" className="btn btn-primary btn-small" disabled={busy}>{busy ? 'Sending...' : 'Send quote'}</button>
         </form>
       )}
 
-      {/* Customer accepts/rejects a quoted request */}
       {role === 'customer' && request.status === 'quoted' && (
-        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-          <button disabled={busy} onClick={() => respond(true)}>Accept quote</button>
-          <button disabled={busy} onClick={() => respond(false)}>Reject</button>
+        <div className="request-actions">
+          <button className="btn btn-primary btn-small" disabled={busy} onClick={() => respond(true)}>Accept quote</button>
+          <button className="btn btn-secondary btn-small" disabled={busy} onClick={() => respond(false)}>Reject</button>
         </div>
       )}
     </div>

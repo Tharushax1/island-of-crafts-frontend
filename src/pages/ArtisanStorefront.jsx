@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
+import { craftVisualClass } from '../craftVisual';
 
 function ArtisanStorefront() {
   const { storeSlug } = useParams();
@@ -15,50 +16,57 @@ function ArtisanStorefront() {
       .finally(() => setLoading(false));
   }, [storeSlug]);
 
-  if (loading) return <p style={{ padding: '24px' }}>Loading storefront...</p>;
-  if (error) return <p style={{ padding: '24px' }}>Failed to load storefront: {error}</p>;
+  if (loading) return <p className="container section">Loading storefront...</p>;
+  if (error) return <p className="container section">Failed to load storefront: {error}</p>;
   if (!data) return null;
 
   const { profile, products } = data;
+  const visualClass = craftVisualClass(profile.craftSpecialty);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '800px' }}>
-      <Link to="/">&larr; Back to products</Link>
-
-      {/* ── Artisan bio / storytelling section ── */}
-      <div style={{ marginTop: '16px', marginBottom: '32px' }}>
-        <h1>{profile.storeName}</h1>
-        {profile.craftSpecialty && <p style={{ color: '#999' }}>{profile.craftSpecialty} · {profile.location}</p>}
-        {profile.bio && <p><strong>{profile.bio}</strong></p>}
-        {profile.story && <p style={{ color: '#666', lineHeight: '1.6' }}>{profile.story}</p>}
-        <Link to={`/request/${profile.user}`}>
-          <button style={{ marginTop: '12px', padding: '10px 16px', cursor: 'pointer' }}>
-            Request a custom piece from this artisan
-          </button>
-        </Link>
-      </div>
-
-      {/* ── This artisan's products ── */}
-      <h2>Products from this store</h2>
-      {products.length === 0 ? (
-        <p>No approved products from this artisan yet.</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-          {products.map((product) => (
-            <Link
-              key={product._id}
-              to={`/products/${product._id}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '16px' }}>
-                <h3>{product.name}</h3>
-                <p><strong>LKR {product.price}</strong></p>
-              </div>
-            </Link>
-          ))}
+    <>
+      <section className={`store-cover craft-visual ${visualClass}`}>
+        <div className="container">
+          <span className="hero-eyebrow">{profile.craftSpecialty}</span>
+          <h1 style={{ color: '#fff' }}>{profile.storeName}</h1>
+          <p>{profile.location}</p>
         </div>
-      )}
-    </div>
+      </section>
+
+      <section className="section container">
+        <Link to="/" className="back-link">&larr; Back to products</Link>
+
+        {profile.bio && <p className="lead-text">{profile.bio}</p>}
+        {profile.story && <p className="card-desc" style={{ maxWidth: '640px', fontSize: '14px' }}>{profile.story}</p>}
+
+        <Link to={`/request/${profile.user}`} className="btn btn-primary" style={{ marginTop: '16px' }}>
+          Request a custom piece
+        </Link>
+
+        <h2 style={{ marginTop: '48px' }}>Products from this store</h2>
+        {products.length === 0 ? (
+          <p>No approved products from this artisan yet.</p>
+        ) : (
+          <div className="product-grid">
+            {products.map((product) => (
+              <Link key={product._id} to={`/products/${product._id}`} className="product-card">
+                {product.images?.[0] ? (
+                  <img src={product.images[0]} alt={product.name} className="product-photo" />
+                ) : (
+                  <div className={`craft-visual ${craftVisualClass(product.category?.name)}`}>
+                    <span className="craft-visual-label">{product.category?.name || 'Handmade'}</span>
+                  </div>
+                )}
+                <div className="card-body">
+                  <h3>{product.name}</h3>
+                  <span className="price-tag">LKR {product.price}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   );
 }
 
