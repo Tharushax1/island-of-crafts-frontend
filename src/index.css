@@ -3823,3 +3823,144 @@ a {
   }
 
 }
+
+/* =====================================================
+   NAVBAR PROFILE
+   ===================================================== */
+
+.navbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 6px 10px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+
+  color: #fff;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.navbar-profile:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(217, 164, 65, 0.45);
+}
+
+
+/* PROFILE AVATAR */
+
+.navbar-profile-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: var(--color-turmeric);
+
+  color: var(--color-indigo-dark);
+
+  border-radius: 50%;
+
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* PROFILE TEXT */
+
+.navbar-profile-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.navbar-profile-name {
+  max-width: 130px;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  color: var(--color-ivory-soft);
+
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.2;
+}
+
+.navbar-profile-role {
+  margin-top: 2px;
+
+  color: var(--color-turmeric);
+
+  font-family: var(--font-mono);
+  font-size: 9px;
+
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+
+  opacity: 0.9;
+}
+
+
+/* LOGOUT BUTTON */
+
+.navbar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  margin-left: 2px;
+  padding: 0;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 8px;
+
+  color: rgba(250, 245, 234, 0.75);
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.navbar-logout-btn:hover {
+  background: rgba(181, 72, 47, 0.22);
+  color: #ffffff;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 850px) {
+
+  .navbar-profile-info {
+    display: none;
+  }
+
+  .navbar-profile {
+    gap: 4px;
+    padding: 5px 6px;
+  }
+
+}

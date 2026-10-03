@@ -1,30 +1,82 @@
 const API_URL = 'http://localhost:5000/api/orders';
 
-// Temporary mock customer headers.
-// Real authentication එක connect කළාම මේවා replace කරන්න.
-const headers = {
-  'Content-Type': 'application/json',
-  'x-mock-role': 'customer',
-  'x-mock-userid': '64f000000000000000000001',
+
+// ======================================================
+// GET JWT TOKEN
+// ======================================================
+
+const getToken = () => {
+  let token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('accessToken') ||
+    sessionStorage.getItem('token') ||
+    sessionStorage.getItem('authToken') ||
+    sessionStorage.getItem('accessToken');
+
+  if (!token) {
+    try {
+      const authData =
+        localStorage.getItem('auth') ||
+        localStorage.getItem('user');
+
+      if (authData) {
+        const parsed = JSON.parse(authData);
+
+        token =
+          parsed?.token ||
+          parsed?.authToken ||
+          parsed?.accessToken ||
+          null;
+      }
+    } catch (error) {
+      console.error(
+        'Failed to read authentication token:',
+        error
+      );
+    }
+  }
+
+  return token;
 };
 
 
-// ===============================
-// CREATE ORDER
-// ===============================
+// ======================================================
+// AUTH HEADERS
+// ======================================================
 
-export const createOrder = async (orderData) => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(orderData),
-  });
+const getHeaders = () => {
+  const token = getToken();
 
-  const data = await response.json();
+  return {
+    'Content-Type': 'application/json',
+
+    ...(token && {
+      Authorization: `Bearer ${token}`,
+    }),
+  };
+};
+
+
+// ======================================================
+// RESPONSE HANDLER
+// ======================================================
+
+const handleResponse = async (
+  response,
+  defaultMessage
+) => {
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
 
   if (!response.ok) {
     throw new Error(
-      data.message || 'Failed to create order'
+      data?.message || defaultMessage
     );
   }
 
@@ -32,34 +84,64 @@ export const createOrder = async (orderData) => {
 };
 
 
-// ===============================
-// GET ORDER
-// ===============================
+// ======================================================
+// CREATE ORDER
+// POST /api/orders
+// ======================================================
 
-export const getOrder = async (orderNumber) => {
+export const createOrder = async (
+  orderData
+) => {
   const response = await fetch(
-    `${API_URL}/${encodeURIComponent(orderNumber)}`,
+    API_URL,
     {
-      method: 'GET',
-      headers,
+      method: 'POST',
+
+      headers: getHeaders(),
+
+      body: JSON.stringify(
+        orderData
+      ),
     }
   );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || 'Failed to fetch order'
-    );
-  }
-
-  return data;
+  return handleResponse(
+    response,
+    'Failed to create order'
+  );
 };
 
 
-// ===============================
+// ======================================================
+// GET ORDER
+// GET /api/orders/:orderNumber
+// ======================================================
+
+export const getOrder = async (
+  orderNumber
+) => {
+  const response = await fetch(
+    `${API_URL}/${encodeURIComponent(
+      orderNumber
+    )}`,
+    {
+      method: 'GET',
+
+      headers: getHeaders(),
+    }
+  );
+
+  return handleResponse(
+    response,
+    'Failed to fetch order'
+  );
+};
+
+
+// ======================================================
 // GET PAYHERE PAYMENT DETAILS
-// ===============================
+// GET /api/orders/:orderNumber/payhere
+// ======================================================
 
 export const getPayHerePayment = async (
   orderNumber
@@ -70,64 +152,74 @@ export const getPayHerePayment = async (
     )}/payhere`,
     {
       method: 'GET',
-      headers,
+
+      headers: getHeaders(),
     }
   );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message ||
-        'Failed to prepare PayHere payment'
-    );
-  }
-
-  return data;
+  return handleResponse(
+    response,
+    'Failed to prepare PayHere payment'
+  );
 };
 
 
-// ===============================
+// ======================================================
 // REDIRECT TO REAL PAYHERE SANDBOX
-// ===============================
+// ======================================================
 
 export const redirectToPayHere = (
   action,
   payment
 ) => {
-  const form = document.createElement('form');
+  const form =
+    document.createElement('form');
 
   form.method = 'POST';
+
   form.action = action;
 
-  Object.entries(payment).forEach(
+
+  Object.entries(
+    payment
+  ).forEach(
     ([key, value]) => {
+
       const input =
-        document.createElement('input');
+        document.createElement(
+          'input'
+        );
 
       input.type = 'hidden';
+
       input.name = key;
 
       input.value =
-        value === null || value === undefined
+        value === null ||
+        value === undefined
           ? ''
           : String(value);
 
-      form.appendChild(input);
+      form.appendChild(
+        input
+      );
+
     }
   );
 
-  document.body.appendChild(form);
+
+  document.body.appendChild(
+    form
+  );
 
   form.submit();
 };
 
 
-// ===============================
+// ======================================================
 // DEMO PAYHERE PAYMENT
 // University project demo only
-// No real money is processed
-// ===============================
+// ======================================================
 
 export const demoPayOrder = async (
   orderNumber
@@ -138,17 +230,13 @@ export const demoPayOrder = async (
     )}/demo-pay`,
     {
       method: 'POST',
-      headers,
+
+      headers: getHeaders(),
     }
   );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || 'Demo payment failed'
-    );
-  }
-
-  return data;
+  return handleResponse(
+    response,
+    'Demo payment failed'
+  );
 };

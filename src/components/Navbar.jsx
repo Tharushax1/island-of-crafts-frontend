@@ -199,30 +199,37 @@ function Navbar() {
               ACCOUNT
           ========================== */}
 
-          {isAuthenticated ? (
+         {isAuthenticated ? (
+  <div className="navbar-profile">
 
-            <div className="navbar-account">
+    <div className="navbar-profile-avatar">
+      {user?.name
+        ? user.name.charAt(0).toUpperCase()
+        : 'U'}
+    </div>
 
-              <UserRound size={19} />
+    <div className="navbar-profile-info">
+      <span className="navbar-profile-name">
+        {user?.name || 'Account'}
+      </span>
 
-              <span>
-                {user?.name || 'Account'}
-              </span>
+      <span className="navbar-profile-role">
+        {user?.role || 'customer'}
+      </span>
+    </div>
 
-              <button
-                className="icon-btn"
-                onClick={handleLogout}
-                aria-label="Logout"
-                type="button"
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </button>
+    <button
+      className="navbar-logout-btn"
+      onClick={handleLogout}
+      aria-label="Logout"
+      type="button"
+      title="Logout"
+    >
+      <LogOut size={17} />
+    </button>
 
-            </div>
-
-          ) : (
-
+  </div>
+) : (
             <button
               className="icon-btn"
               aria-label="Login"

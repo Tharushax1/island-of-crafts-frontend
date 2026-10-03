@@ -13,34 +13,69 @@ import {
   clearCart,
 } from './services/cartApi';
 
+import { useAuth } from './context/AuthContext';
+
+
 const CartContext = createContext(null);
 
-export function CartProvider({ children }) {
+
+export function CartProvider({
+  children,
+}) {
+  const {
+    isAuthenticated,
+  } = useAuth();
+
   const [cart, setCart] = useState({
     items: [],
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  // Calculate TOTAL UNITS
+
+  // ======================================================
+  // CART QUANTITY
+  // ======================================================
+
   const cartQty =
     cart?.items?.reduce(
       (total, item) =>
-        total + Number(item.quantity || 0),
+        total +
+        Number(item.quantity || 0),
       0
     ) || 0;
 
-  // Load cart
+
+  // ======================================================
+  // FETCH CART
+  // ======================================================
+
   const fetchCart = async () => {
+    if (!isAuthenticated) {
+      setCart({
+        items: [],
+      });
+
+      setLoading(false);
+
+      return;
+    }
+
     try {
-      const data = await getCart();
+      setLoading(true);
+
+      const data =
+        await getCart();
 
       setCart(
         data || {
           items: [],
         }
       );
+
     } catch (error) {
+
       console.error(
         'Failed to load cart:',
         error
@@ -49,25 +84,44 @@ export function CartProvider({ children }) {
       setCart({
         items: [],
       });
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
-  // Initial load
+
+  // ======================================================
+  // REFRESH WHEN LOGIN / LOGOUT CHANGES
+  // ======================================================
+
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [isAuthenticated]);
 
-  // ADD
+
+  // ======================================================
+  // ADD ITEM
+  // ======================================================
+
   const addItem = async (
     productId,
     quantity = 1
   ) => {
-    const updatedCart = await addToCart(
-      productId,
-      quantity
-    );
+
+    if (!isAuthenticated) {
+      throw new Error(
+        'Please sign in before adding items to your cart'
+      );
+    }
+
+    const updatedCart =
+      await addToCart(
+        productId,
+        quantity
+      );
 
     setCart(
       updatedCart || {
@@ -78,11 +132,16 @@ export function CartProvider({ children }) {
     return updatedCart;
   };
 
+
+  // ======================================================
   // UPDATE QUANTITY
+  // ======================================================
+
   const updateItem = async (
     productId,
     quantity
   ) => {
+
     const updatedCart =
       await updateCartItem(
         productId,
@@ -98,13 +157,21 @@ export function CartProvider({ children }) {
     return updatedCart;
   };
 
-  // REMOVE
-  const removeItem = async (productId) => {
-    await removeFromCart(productId);
 
-    // IMPORTANT:
-    // Fetch the complete cart again.
-    const updatedCart = await getCart();
+  // ======================================================
+  // REMOVE ITEM
+  // ======================================================
+
+  const removeItem = async (
+    productId
+  ) => {
+
+    await removeFromCart(
+      productId
+    );
+
+    const updatedCart =
+      await getCart();
 
     setCart(
       updatedCart || {
@@ -115,20 +182,30 @@ export function CartProvider({ children }) {
     return updatedCart;
   };
 
-  // CLEAR
+
+  // ======================================================
+  // CLEAR CART
+  // ======================================================
+
   const clearAll = async () => {
+
     await clearCart();
 
-    // Immediately make Navbar quantity 0
     setCart({
       items: [],
     });
+
   };
 
-  // Manual refresh
+
+  // ======================================================
+  // MANUAL REFRESH
+  // ======================================================
+
   const refreshCart = async () => {
     await fetchCart();
   };
+
 
   return (
     <CartContext.Provider
@@ -151,8 +228,10 @@ export function CartProvider({ children }) {
   );
 }
 
+
 export function useCart() {
-  const context = useContext(CartContext);
+  const context =
+    useContext(CartContext);
 
   if (!context) {
     throw new Error(
