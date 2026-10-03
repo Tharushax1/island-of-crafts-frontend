@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
 import {
   Search,
   ShoppingBag,
   UserRound,
+  LogOut,
 } from 'lucide-react';
 
 import { useCart } from '../CartContext';
+import { useAuth } from '../context/AuthContext';
+
 
 function Navbar() {
   const [query, setQuery] = useState('');
@@ -14,6 +18,17 @@ function Navbar() {
   const navigate = useNavigate();
 
   const { cartQty } = useCart();
+
+  const {
+    user,
+    isAuthenticated,
+    logout,
+  } = useAuth();
+
+
+  // ===============================
+  // SEARCH
+  // ===============================
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -25,13 +40,29 @@ function Navbar() {
     );
   };
 
+
+  // ===============================
+  // LOGOUT
+  // ===============================
+
+  const handleLogout = () => {
+    logout();
+
+    navigate('/login');
+  };
+
+
   return (
     <header className="navbar">
+
       <div className="pattern-strip" />
 
       <div className="navbar-inner container">
 
-        {/* LOGO */}
+        {/* ==========================
+            LOGO
+        ========================== */}
+
         <Link
           to="/"
           className="navbar-logo"
@@ -39,7 +70,11 @@ function Navbar() {
           Island of Crafts
         </Link>
 
-        {/* NAVIGATION */}
+
+        {/* ==========================
+            NAVIGATION
+        ========================== */}
+
         <ul className="navbar-links">
 
           <li>
@@ -68,14 +103,21 @@ function Navbar() {
 
         </ul>
 
-        {/* ACTIONS */}
+
+        {/* ==========================
+            ACTIONS
+        ========================== */}
+
         <div className="navbar-actions">
 
+
           {/* SEARCH */}
+
           <form
             className="navbar-search"
             onSubmit={handleSearch}
           >
+
             <Search
               size={15}
               className="navbar-search-icon"
@@ -89,49 +131,135 @@ function Navbar() {
                 setQuery(e.target.value)
               }
             />
+
           </form>
 
-          {/* ADMIN DASHBOARD BUTTON */}
-          <button
-            type="button"
-            onClick={() => navigate('/admin')}
-            style={{
-              background: '#d9a52e',
-              color: '#132d46',
-              border: 'none',
-              padding: '10px 16px',
-              borderRadius: '7px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Admin
-          </button>
 
-          {/* ACCOUNT */}
-          <button
-            className="icon-btn"
-            aria-label="Account"
-            type="button"
-          >
-            <UserRound size={19} />
-          </button>
+          {/* ==========================
+              ADMIN BUTTON
+              Only show for admin
+          ========================== */}
 
-          {/* CART */}
+          {isAuthenticated &&
+            user?.role === 'admin' && (
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/admin')
+                }
+                style={{
+                  background: '#d9a52e',
+                  color: '#132d46',
+                  border: 'none',
+                  padding: '10px 16px',
+                  borderRadius: '7px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Admin
+              </button>
+
+            )}
+
+
+          {/* ==========================
+              ARTISAN BUTTON
+              Only show for artisan
+          ========================== */}
+
+          {isAuthenticated &&
+            user?.role === 'artisan' && (
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/artisan')
+                }
+                style={{
+                  background: '#d9a52e',
+                  color: '#132d46',
+                  border: 'none',
+                  padding: '10px 16px',
+                  borderRadius: '7px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Artisan
+              </button>
+
+            )}
+
+
+          {/* ==========================
+              ACCOUNT
+          ========================== */}
+
+          {isAuthenticated ? (
+
+            <div className="navbar-account">
+
+              <UserRound size={19} />
+
+              <span>
+                {user?.name || 'Account'}
+              </span>
+
+              <button
+                className="icon-btn"
+                onClick={handleLogout}
+                aria-label="Logout"
+                type="button"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+
+            </div>
+
+          ) : (
+
+            <button
+              className="icon-btn"
+              aria-label="Login"
+              type="button"
+              onClick={() =>
+                navigate('/login')
+              }
+              title="Login"
+            >
+              <UserRound size={19} />
+            </button>
+
+          )}
+
+
+          {/* ==========================
+              CART
+          ========================== */}
+
           <Link
             to="/cart"
             className="icon-btn cart-icon-wrapper"
             aria-label={`Cart (${cartQty} items)`}
           >
+
             <ShoppingBag size={19} />
 
             {cartQty > 0 && (
+
               <span className="cart-count">
+
                 {cartQty > 99
                   ? '99+'
                   : cartQty}
+
               </span>
+
             )}
 
           </Link>
@@ -139,8 +267,10 @@ function Navbar() {
         </div>
 
       </div>
+
     </header>
   );
 }
+
 
 export default Navbar;
