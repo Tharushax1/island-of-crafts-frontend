@@ -1,4 +1,8 @@
-const API_URL = 'http://localhost:5000/api/cart';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5000/api';
+
+const API_URL = `${API_BASE_URL}/cart`;
 
 
 // ======================================================
@@ -6,7 +10,6 @@ const API_URL = 'http://localhost:5000/api/cart';
 // ======================================================
 
 const getToken = () => {
-  // Most common token names
   let token =
     localStorage.getItem('token') ||
     localStorage.getItem('authToken') ||
@@ -15,7 +18,6 @@ const getToken = () => {
     sessionStorage.getItem('authToken') ||
     sessionStorage.getItem('accessToken');
 
-  // If authentication was saved as one JSON object
   if (!token) {
     try {
       const authData =
@@ -88,7 +90,6 @@ const handleResponse = async (
 
 // ======================================================
 // GET CART
-// GET /api/cart
 // ======================================================
 
 export const getCart = async () => {
@@ -108,8 +109,7 @@ export const getCart = async () => {
 
 
 // ======================================================
-// ADD PRODUCT TO CART
-// POST /api/cart
+// ADD PRODUCT
 // ======================================================
 
 export const addToCart = async (
@@ -139,7 +139,6 @@ export const addToCart = async (
 
 // ======================================================
 // UPDATE CART ITEM
-// PUT /api/cart/:productId
 // ======================================================
 
 export const updateCartItem = async (
@@ -168,7 +167,6 @@ export const updateCartItem = async (
 
 // ======================================================
 // REMOVE PRODUCT
-// DELETE /api/cart/:productId
 // ======================================================
 
 export const removeFromCart = async (
@@ -178,7 +176,6 @@ export const removeFromCart = async (
     `${API_URL}/${productId}`,
     {
       method: 'DELETE',
-
       headers: getHeaders(),
     }
   );
@@ -192,7 +189,6 @@ export const removeFromCart = async (
 
 // ======================================================
 // CLEAR CART
-// DELETE /api/cart
 // ======================================================
 
 export const clearCart = async () => {
@@ -200,7 +196,6 @@ export const clearCart = async () => {
     API_URL,
     {
       method: 'DELETE',
-
       headers: getHeaders(),
     }
   );

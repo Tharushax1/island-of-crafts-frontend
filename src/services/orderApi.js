@@ -1,4 +1,8 @@
-const API_URL = 'http://localhost:5000/api/orders';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5000/api';
+
+const API_URL = `${API_BASE_URL}/orders`;
 
 
 // ======================================================
@@ -86,7 +90,6 @@ const handleResponse = async (
 
 // ======================================================
 // CREATE ORDER
-// POST /api/orders
 // ======================================================
 
 export const createOrder = async (
@@ -99,9 +102,7 @@ export const createOrder = async (
 
       headers: getHeaders(),
 
-      body: JSON.stringify(
-        orderData
-      ),
+      body: JSON.stringify(orderData),
     }
   );
 
@@ -114,7 +115,6 @@ export const createOrder = async (
 
 // ======================================================
 // GET ORDER
-// GET /api/orders/:orderNumber
 // ======================================================
 
 export const getOrder = async (
@@ -140,7 +140,6 @@ export const getOrder = async (
 
 // ======================================================
 // GET PAYHERE PAYMENT DETAILS
-// GET /api/orders/:orderNumber/payhere
 // ======================================================
 
 export const getPayHerePayment = async (
@@ -165,7 +164,7 @@ export const getPayHerePayment = async (
 
 
 // ======================================================
-// REDIRECT TO REAL PAYHERE SANDBOX
+// REDIRECT TO PAYHERE
 // ======================================================
 
 export const redirectToPayHere = (
@@ -176,22 +175,14 @@ export const redirectToPayHere = (
     document.createElement('form');
 
   form.method = 'POST';
-
   form.action = action;
 
-
-  Object.entries(
-    payment
-  ).forEach(
+  Object.entries(payment).forEach(
     ([key, value]) => {
-
       const input =
-        document.createElement(
-          'input'
-        );
+        document.createElement('input');
 
       input.type = 'hidden';
-
       input.name = key;
 
       input.value =
@@ -200,25 +191,18 @@ export const redirectToPayHere = (
           ? ''
           : String(value);
 
-      form.appendChild(
-        input
-      );
-
+      form.appendChild(input);
     }
   );
 
-
-  document.body.appendChild(
-    form
-  );
+  document.body.appendChild(form);
 
   form.submit();
 };
 
 
 // ======================================================
-// DEMO PAYHERE PAYMENT
-// University project demo only
+// DEMO PAYMENT
 // ======================================================
 
 export const demoPayOrder = async (

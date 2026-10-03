@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../CartContext';
 import {
   createOrder,
-  demoPayOrder,
+  getPayHerePayment,
+  redirectToPayHere,
 } from '../services/orderApi';
 
 const FREE_DELIVERY_LIMIT = 20000;
@@ -182,16 +183,15 @@ const handleSubmit = async (event) => {
     // ============================
 
 if (paymentMethod === 'payhere') {
-  const demoUrl =
-    `${window.location.origin}/payhere-demo/${orderNumber}`;
-
-  window.open(
-    demoUrl,
-    '_blank',
-    'noopener,noreferrer'
-  );
+  const payHereData =
+    await getPayHerePayment(orderNumber);
 
   await refreshCart();
+
+  redirectToPayHere(
+    payHereData.action,
+    payHereData.payment
+  );
 
   return;
 }

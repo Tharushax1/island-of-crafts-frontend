@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
-const API_URL = 'http://localhost:5000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5000/api';
 
 
 // ======================================================
@@ -95,7 +97,7 @@ function AdminDashboard() {
 
   const fetchDashboard = async () => {
     const response = await fetch(
-      `${API_URL}/api/admin/dashboard`,
+      `${API_BASE_URL}/admin/dashboard`,
       {
         headers: getHeaders(),
       }
@@ -122,7 +124,7 @@ function AdminDashboard() {
   const fetchPendingArtisans =
     async () => {
       const response = await fetch(
-        `${API_URL}/api/admin/artisans/pending`,
+        `${API_BASE_URL}/admin/artisans/pending`,
         {
           headers: getHeaders(),
         }
@@ -155,7 +157,7 @@ function AdminDashboard() {
   const fetchPendingProducts =
     async () => {
       const response = await fetch(
-        `${API_URL}/api/admin/products/pending`,
+        `${API_BASE_URL}/admin/products/pending`,
         {
           headers: getHeaders(),
         }
@@ -230,7 +232,7 @@ function AdminDashboard() {
       setApprovingId(artisanId);
 
       const response = await fetch(
-        `${API_URL}/api/admin/artisans/${artisanId}/approve`,
+        `${API_BASE_URL}/admin/artisans/${artisanId}/approve`,
         {
           method: 'PUT',
           headers: getHeaders(),
@@ -298,7 +300,7 @@ function AdminDashboard() {
       setRejectingId(artisanId);
 
       const response = await fetch(
-        `${API_URL}/api/admin/artisans/${artisanId}/reject`,
+        `${API_BASE_URL}/admin/artisans/${artisanId}/reject`,
         {
           method: 'PUT',
           headers: getHeaders(),
@@ -367,7 +369,7 @@ function AdminDashboard() {
       setUpdatingProductId(productId);
 
       const response = await fetch(
-        `${API_URL}/api/products/${productId}/approve`,
+        `${API_BASE_URL}/products/${productId}/approve`,
         {
           method: 'PUT',
 
