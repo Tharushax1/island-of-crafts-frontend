@@ -91,6 +91,24 @@ function Navbar() {
             />
           </form>
 
+          {/* ADMIN DASHBOARD BUTTON */}
+          <button
+            type="button"
+            onClick={() => navigate('/admin')}
+            style={{
+              background: '#d9a52e',
+              color: '#132d46',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '7px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Admin
+          </button>
+
           {/* ACCOUNT */}
           <button
             className="icon-btn"
@@ -115,9 +133,11 @@ function Navbar() {
                   : cartQty}
               </span>
             )}
+
           </Link>
 
         </div>
+
       </div>
     </header>
   );

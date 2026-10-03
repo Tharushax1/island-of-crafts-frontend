@@ -11,6 +11,9 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import { CartProvider } from './CartContext';
+import AdminDashboard from './pages/AdminDashboard';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PayHereDemo from './pages/PayHereDemo';
 
 function App() {
   return (
@@ -29,6 +32,9 @@ function App() {
             <Route path="/cart"element={<Cart />}/>
             <Route path="/checkout"element={<Checkout />}/>
             <Route path="/order-confirmation/:orderNumber"element={<OrderConfirmation />}/>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/payment-success/:orderNumber"element={<PaymentSuccess />}/>
+            <Route path="/payhere-demo/:orderNumber"element={<PayHereDemo />}/>
           </Routes>
         </Layout>
       </BrowserRouter>

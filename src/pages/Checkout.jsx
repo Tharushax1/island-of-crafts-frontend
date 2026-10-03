@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useCart } from '../CartContext';
-import { createOrder } from '../services/orderApi';
+import {
+  createOrder,
+  demoPayOrder,
+} from '../services/orderApi';
 
 const FREE_DELIVERY_LIMIT = 20000;
 const DELIVERY_FEE = 350;
@@ -10,6 +13,10 @@ const DELIVERY_FEE = 350;
 function Checkout() {
   const { cart, loading, refreshCart } = useCart();
   const navigate = useNavigate();
+
+  // ================================
+  // CUSTOMER FORM
+  // ================================
 
   const [form, setForm] = useState({
     fullName: '',
@@ -20,15 +27,22 @@ function Checkout() {
     postalCode: '',
   });
 
+  // ================================
+  // PAYMENT METHOD
+  // ================================
+
+  const [paymentMethod, setPaymentMethod] =
+    useState('cash_on_delivery');
+
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
   const items = cart?.items || [];
 
-  // ==========================================
+  // ================================
   // SUBTOTAL
-  // ==========================================
+  // ================================
 
   const subtotal = useMemo(() => {
     return items.reduce((sum, item) => {
@@ -39,9 +53,9 @@ function Checkout() {
     }, 0);
   }, [items]);
 
-  // ==========================================
+  // ================================
   // DELIVERY
-  // ==========================================
+  // ================================
 
   const delivery =
     subtotal >= FREE_DELIVERY_LIMIT
@@ -52,9 +66,9 @@ function Checkout() {
 
   const total = subtotal + delivery;
 
-  // ==========================================
+  // ================================
   // HANDLE INPUT
-  // ==========================================
+  // ================================
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -71,9 +85,9 @@ function Checkout() {
     }
   };
 
-  // ==========================================
-  // SAVE CHECKOUT DETAILS
-  // ==========================================
+  // ================================
+  // SAVE DETAILS
+  // ================================
 
   const handleSave = () => {
     setError('');
@@ -86,78 +100,116 @@ function Checkout() {
       !form.city ||
       !form.postalCode
     ) {
-      setError('Please complete all customer and delivery details.');
+      setError(
+        'Please complete all customer and delivery details.'
+      );
+
       setSaved(false);
+
       return;
     }
 
     setSaved(true);
   };
 
-  // ==========================================
-  // HANDLE ORDER SUBMISSION
-  // ==========================================
+  // ================================
+  // SUBMIT ORDER
+  // ================================
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    if (items.length === 0) {
-      setError('Your cart is empty.');
-      return;
-    }
+  if (items.length === 0) {
+    setError('Your cart is empty.');
+    return;
+  }
+
+  if (
+    !form.fullName ||
+    !form.email ||
+    !form.phone ||
+    !form.address ||
+    !form.city ||
+    !form.postalCode
+  ) {
+    setError(
+      'Please complete all customer and delivery details.'
+    );
+    return;
+  }
+
+  setSubmitting(true);
+  setError('');
+
+  try {
+    // Create order first
+    const data = await createOrder({
+      email: form.email,
+
+      paymentMethod,
+
+      shippingAddress: {
+        fullName: form.fullName,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        postalCode: form.postalCode,
+      },
+    });
+
+    const orderNumber =
+      data.order.orderNumber;
+
+    // ============================
+    // CASH ON DELIVERY
+    // ============================
 
     if (
-      !form.fullName ||
-      !form.email ||
-      !form.phone ||
-      !form.address ||
-      !form.city ||
-      !form.postalCode
+      paymentMethod ===
+      'cash_on_delivery'
     ) {
-      setError('Please complete all customer and delivery details.');
+      await refreshCart();
+
+      navigate(
+        `/order-confirmation/${orderNumber}`
+      );
+
       return;
     }
 
-    setSubmitting(true);
-    setError('');
+    // ============================
+    // PAYHERE
+    // ============================
 
-    try {
-      const data = await createOrder({
-        email: form.email,
+if (paymentMethod === 'payhere') {
+  const demoUrl =
+    `${window.location.origin}/payhere-demo/${orderNumber}`;
 
-        paymentMethod: 'cash_on_delivery',
+  window.open(
+    demoUrl,
+    '_blank',
+    'noopener,noreferrer'
+  );
 
-        shippingAddress: {
-          fullName: form.fullName,
-          phone: form.phone,
-          address: form.address,
-          city: form.city,
-          postalCode: form.postalCode,
-        },
-      });
+  await refreshCart();
 
-      // Backend clears the cart after order creation.
-      // Refresh CartContext so navbar cart count becomes 0.
-      await refreshCart();
+  return;
+}
 
-      // Go to order confirmation page.
-      navigate(
-        `/order-confirmation/${data.order.orderNumber}`
-      );
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
+  } catch (err) {
+    setError(
+      err.response?.data?.message ||
         err.message ||
         'Unable to place your order.'
-      );
+    );
 
-      setSubmitting(false);
-    }
-  };
+    setSubmitting(false);
+  }
+};
 
-  // ==========================================
+  // ================================
   // LOADING
-  // ==========================================
+  // ================================
 
   if (loading) {
     return (
@@ -169,9 +221,9 @@ function Checkout() {
     );
   }
 
-  // ==========================================
+  // ================================
   // EMPTY CART
-  // ==========================================
+  // ================================
 
   if (items.length === 0) {
     return (
@@ -182,13 +234,11 @@ function Checkout() {
             Checkout
           </span>
 
-          <h1>
-            Your cart is empty
-          </h1>
+          <h1>Your cart is empty</h1>
 
           <p>
-            Add some handmade pieces before
-            continuing to checkout.
+            Add some handmade pieces before continuing
+            to checkout.
           </p>
 
           <Link
@@ -203,17 +253,14 @@ function Checkout() {
     );
   }
 
-  // ==========================================
+  // ================================
   // CHECKOUT PAGE
-  // ==========================================
+  // ================================
 
   return (
     <section className="section container checkout-page">
 
-      {/* ======================================
-          HEADER
-      ====================================== */}
-
+      {/* HEADER */}
       <div className="checkout-header">
 
         <div>
@@ -242,10 +289,7 @@ function Checkout() {
 
       </div>
 
-      {/* ======================================
-          ERROR
-      ====================================== */}
-
+      {/* ERROR */}
       {error && (
         <div
           className="checkout-error"
@@ -255,15 +299,11 @@ function Checkout() {
         </div>
       )}
 
-      {/* ======================================
-          CHECKOUT LAYOUT
-      ====================================== */}
-
       <div className="checkout-layout">
 
-        {/* ====================================
+        {/* ==========================
             LEFT SIDE
-        ==================================== */}
+        ========================== */}
 
         <form
           id="checkout-form"
@@ -271,10 +311,7 @@ function Checkout() {
           onSubmit={handleSubmit}
         >
 
-          {/* ==================================
-              CUSTOMER DETAILS
-          ================================== */}
-
+          {/* CUSTOMER DETAILS */}
           <div className="checkout-card">
 
             <span className="checkout-card-label">
@@ -345,11 +382,7 @@ function Checkout() {
 
           </div>
 
-
-          {/* ==================================
-              DELIVERY
-          ================================== */}
-
+          {/* DELIVERY */}
           <div className="checkout-card">
 
             <span className="checkout-card-label">
@@ -380,7 +413,6 @@ function Checkout() {
 
               </label>
 
-
               <label className="checkout-field">
 
                 <span>
@@ -398,7 +430,6 @@ function Checkout() {
                 />
 
               </label>
-
 
               <label className="checkout-field">
 
@@ -422,11 +453,131 @@ function Checkout() {
 
           </div>
 
+          {/* ==========================
+              PAYMENT METHOD
+          ========================== */}
 
-          {/* ==================================
-              SAVE BUTTON
-          ================================== */}
+          <div className="checkout-card">
 
+            <span className="checkout-card-label">
+              03 · Payment
+            </span>
+
+            <h2>
+              Payment Method
+            </h2>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                marginTop: '20px',
+              }}
+            >
+
+              {/* CASH ON DELIVERY */}
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  border:
+                    paymentMethod === 'cash_on_delivery'
+                      ? '2px solid #17324d'
+                      : '1px solid #ddd',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  background:
+                    paymentMethod === 'cash_on_delivery'
+                      ? '#f7f3e8'
+                      : '#fff',
+                }}
+              >
+
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="cash_on_delivery"
+                  checked={
+                    paymentMethod ===
+                    'cash_on_delivery'
+                  }
+                  onChange={(event) =>
+                    setPaymentMethod(
+                      event.target.value
+                    )
+                  }
+                />
+
+                <span>
+                  <strong>
+                    Cash on Delivery
+                  </strong>
+
+                  <br />
+
+                  <small>
+                    Pay when your order is delivered.
+                  </small>
+                </span>
+
+              </label>
+
+              {/* PAYHERE */}
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  border:
+                    paymentMethod === 'payhere'
+                      ? '2px solid #17324d'
+                      : '1px solid #ddd',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  background:
+                    paymentMethod === 'payhere'
+                      ? '#f7f3e8'
+                      : '#fff',
+                }}
+              >
+
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="payhere"
+                  checked={
+                    paymentMethod === 'payhere'
+                  }
+                  onChange={(event) =>
+                    setPaymentMethod(
+                      event.target.value
+                    )
+                  }
+                />
+
+                <span>
+                  <strong>
+                    PayHere
+                  </strong>
+
+                  <br />
+
+                  <small>
+                    Pay securely online using PayHere.
+                  </small>
+                </span>
+
+              </label>
+
+            </div>
+
+          </div>
+
+          {/* SAVE */}
           <div className="checkout-save-area">
 
             <button
@@ -441,10 +592,9 @@ function Checkout() {
 
         </form>
 
-
-        {/* ====================================
+        {/* ==========================
             RIGHT SIDE
-        ==================================== */}
+        ========================== */}
 
         <aside className="checkout-summary">
 
@@ -458,15 +608,10 @@ function Checkout() {
               Order Summary
             </h2>
 
-
-            {/* ==================================
-                ORDER ITEMS
-            ================================== */}
-
+            {/* ORDER ITEMS */}
             <div className="checkout-summary-items">
 
               {items.map((item) => {
-
                 const product = item.product;
 
                 const quantity =
@@ -508,16 +653,11 @@ function Checkout() {
 
                   </div>
                 );
-
               })}
 
             </div>
 
-
-            {/* ==================================
-                SUBTOTAL
-            ================================== */}
-
+            {/* SUBTOTAL */}
             <div className="summary-line">
 
               <span>
@@ -530,11 +670,7 @@ function Checkout() {
 
             </div>
 
-
-            {/* ==================================
-                DELIVERY
-            ================================== */}
-
+            {/* DELIVERY */}
             <div className="summary-line">
 
               <span>
@@ -549,14 +685,9 @@ function Checkout() {
 
             </div>
 
-
             <div className="summary-divider" />
 
-
-            {/* ==================================
-                TOTAL
-            ================================== */}
-
+            {/* TOTAL */}
             <div className="summary-total">
 
               <span>
@@ -569,11 +700,31 @@ function Checkout() {
 
             </div>
 
+            {/* PAYMENT METHOD SUMMARY */}
+            <div
+              style={{
+                marginTop: '18px',
+                padding: '12px',
+                background: '#f7f3e8',
+                borderRadius: '8px',
+              }}
+            >
 
-            {/* ==================================
-                DELIVERY MESSAGE
-            ================================== */}
+              <small>
+                Payment Method
+              </small>
 
+              <br />
+
+              <strong>
+                {paymentMethod === 'payhere'
+                  ? 'PayHere'
+                  : 'Cash on Delivery'}
+              </strong>
+
+            </div>
+
+            {/* DELIVERY MESSAGE */}
             {subtotal < FREE_DELIVERY_LIMIT && (
               <p className="delivery-note">
 
@@ -588,7 +739,6 @@ function Checkout() {
               </p>
             )}
 
-
             {subtotal >= FREE_DELIVERY_LIMIT && (
               <p className="free-delivery-note">
 
@@ -597,27 +747,27 @@ function Checkout() {
               </p>
             )}
 
-
-            {/* ==================================
-                PLACE ORDER BUTTON
-            ================================== */}
-
+            {/* PLACE ORDER */}
             <button
               type="submit"
               form="checkout-form"
               className="btn btn-primary place-order-btn"
               disabled={submitting}
             >
-              {submitting
-                ? 'Placing Order...'
-                : 'Place Order'}
-            </button>
 
+              {submitting
+                ? 'Processing...'
+                : paymentMethod === 'payhere'
+                  ? 'Continue with PayHere'
+                  : 'Place Order'}
+
+            </button>
 
             <p className="secure-note">
 
-              Your order is prepared directly
-              with our independent artisans.
+              {paymentMethod === 'payhere'
+                ? 'You will continue to secure online payment after placing your order.'
+                : 'Your order is prepared directly with our independent artisans.'}
 
             </p>
 
