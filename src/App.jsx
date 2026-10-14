@@ -18,6 +18,7 @@ import About from './pages/About';
 // Authentication
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Cart & Orders
 import Cart from './pages/Cart';
@@ -35,6 +36,66 @@ import PayHereDemo from './pages/PayHereDemo';
 function App() {
   return (
     <AuthProvider>
+
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+
+            {/* Public pages */}
+            <Route path="/" element={<ProductList />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/artisans" element={<ArtisansList />} />
+            <Route path="/store/:storeSlug" element={<ArtisanStorefront />} />
+            <Route path="/about" element={<About />} />
+
+            {/* Authentication */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected customer page */}
+            <Route
+              path="/requests"
+              element={
+                <ProtectedRoute allowedRoles={['customer']}>
+                  <MyRequests />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected custom request */}
+            <Route
+              path="/request/:artisanId"
+              element={
+                <ProtectedRoute allowedRoles={['customer']}>
+                  <CustomRequestForm />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Artisan */}
+            <Route
+              path="/artisan"
+              element={
+                <ProtectedRoute allowedRoles={['artisan']}>
+                  <div>Artisan Dashboard</div>
+                </ProtectedRoute>
+              }
+            />
+
+          </Routes>
+        </Layout>
+      </BrowserRouter>
+
       <CartProvider>
 
         <BrowserRouter>
@@ -208,6 +269,7 @@ function App() {
         </BrowserRouter>
 
       </CartProvider>
+
     </AuthProvider>
   );
 }
