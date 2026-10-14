@@ -14,6 +14,7 @@ import MyRequests from './pages/MyRequests';
 import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -58,7 +59,7 @@ function App() {
               path="/admin"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <div>Admin Dashboard</div>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
